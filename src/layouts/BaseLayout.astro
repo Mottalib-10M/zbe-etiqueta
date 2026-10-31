@@ -188,5 +188,7 @@ const crumbAside = Astro.slots.has('crumb-aside') ? (await Astro.slots.render('c
       document.addEventListener('click', (e) => { if (!(e.target as HTMLElement).closest('.nav-dropdown')) closeAll(); });
     </script>
     <ConsentBanner lang={lang} />
+    {/* Tableaux qui débordent sur mobile : classe .tableau-defile (ombre, global.css), retirée en fin de défilement. */}
+    <script is:inline set:html={`(function(){function v(){document.querySelectorAll('main table,main .overflow-x-auto').forEach(function(t){var b=t.closest('.overflow-x-auto')||t,d=b.scrollWidth-b.clientWidth>4;b.classList.toggle('tableau-defile',d);if(d&&!b.__fin){b.__fin=1;b.addEventListener('scroll',function(){b.classList.toggle('fin',b.scrollLeft+b.clientWidth>=b.scrollWidth-4)},{passive:true})}})}addEventListener('load',v);addEventListener('resize',v)})();`} />
   </body>
 </html>

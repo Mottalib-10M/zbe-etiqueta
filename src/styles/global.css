@@ -28,19 +28,16 @@ h1, h2, h3, h4 { hyphens: auto; overflow-wrap: break-word; }
 .prose .overflow-x-auto { margin-top: 1.75em; margin-bottom: 1.75em; } .prose .overflow-x-auto > table { margin-top: 0; margin-bottom: 0; }
 
 /* Tableaux sur mobile (audit du 2026-10-28 : 85 sites sur 202 avaient un tableau plus large que
-   l'écran, colonnes coupées sans indice) : tout tableau du contenu défile dans sa propre largeur,
-   et une ombre sur le bord indique qu'il reste des colonnes (ombres « locales » qui suivent le
-   défilement, sans JS). Un tableau déjà dans un .overflow-x-auto garde son conteneur. */
+   l'écran, colonnes coupées sans indice) : tout tableau du contenu défile dans sa propre largeur.
+   Le script de fin de BaseLayout marque .tableau-defile ceux qui débordent vraiment : une ombre
+   intérieure à droite signale les colonnes restantes, puis disparaît en fin de défilement (.fin).
+   Pas de dégradé de fond : il peignait des bandes blanches sur les tableaux posés dans un encart
+   coloré. */
 @media (max-width: 767px) {
-  main :not(.overflow-x-auto) > table, .overflow-x-auto {
-    max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
-    background:
-      linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0)) left / 2rem 100% no-repeat local,
-      linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0)) right / 2rem 100% no-repeat local,
-      radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / .18), rgb(0 0 0 / 0)) left / .75rem 100% no-repeat scroll,
-      radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / .18), rgb(0 0 0 / 0)) right / .75rem 100% no-repeat scroll;
-  }
+  main :not(.overflow-x-auto) > table, .overflow-x-auto { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   main :not(.overflow-x-auto) > table { display: block; }
+  .tableau-defile { box-shadow: inset -14px 0 12px -12px rgb(0 0 0 / .3); }
+  .tableau-defile.fin { box-shadow: none; }
 }
 
 /* Aide d'un champ (RECETTE §10.3) : dans une rangée à deux champs, si le voisin de droite n'a pas
