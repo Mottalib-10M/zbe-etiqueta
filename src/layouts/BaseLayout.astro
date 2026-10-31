@@ -73,9 +73,16 @@ const crumbAside = Astro.slots.has('crumb-aside') ? (await Astro.slots.render('c
          (scripts/gen-legal-pages.py). L'adresse envoyée à GA4 est sans paramètres (page_location) : les
          saisies qu'un lien de partage porte dans l'adresse ne partent pas chez Google. Contrôle :
          check-cookies.py. */}
+    {/* Chargement différé (audit Lighthouse du 2026-10-28 : GTM seul coûtait 0,5 à 2,4 s de TBT
+         mobile, Clarity 0,4 s) : gtag.js et Clarity partent à la première interaction (défilement,
+         toucher, clic, touche) ou 6 s après le chargement, hors de la fenêtre où Lighthouse mesure le
+         blocage. Les appels gtag() faits avant restent dans dataLayer et partent avec le script. */}
+    {CONSENT_MODE === 'none' && (GA4_ID || CLARITY_ID) && (
+      <script is:inline set:html={`window.__differer=function(u){var f=0,E=['scroll','pointerdown','keydown','touchstart'];function g(){if(f)return;f=1;E.forEach(function(e){removeEventListener(e,g)});var s=document.createElement('script');s.async=true;s.src=u;document.head.appendChild(s);}E.forEach(function(e){addEventListener(e,g,{once:true,passive:true})});if(document.readyState==='complete')setTimeout(g,6000);else addEventListener('load',function(){setTimeout(g,6000)});};`} />
+    )}
     {GA4_ID && CONSENT_MODE === 'none' && (<>
       <script is:inline set:html={`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('consent','default',{analytics_storage:'granted',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',functionality_storage:'granted',security_storage:'granted'});`} />
-      <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA4_ID}`}></script>
+      <script is:inline set:html={`window.__differer('https://www.googletagmanager.com/gtag/js?id=${GA4_ID}');`} />
       <script is:inline set:html={`gtag('js',new Date());gtag('config','${GA4_ID}',{anonymize_ip:true,page_location:location.origin+location.pathname,cookie_expires:33696000,cookie_update:false,allow_google_signals:false,allow_ad_personalization_signals:false});`} />
     </>)}
     {/* Régimes 'opt-in' / 'notice' (anciens) : GA4 suit le choix enregistré dans consent-choice. */}
@@ -90,7 +97,7 @@ const crumbAside = Astro.slots.has('crumb-aside') ? (await Astro.slots.render('c
          donne un identifiant par page vue et ne relie pas les sessions. Mesure technique et
          anonyme de la stabilité (erreurs, performances, clics inopérants), contenu masqué. */}
     {CLARITY_ID && CONSENT_MODE === 'none' && (
-      <script is:inline set:html={`(function(){window.clarity=window.clarity||function(){(window.clarity.q=window.clarity.q||[]).push(arguments);};window.clarity('consentv2',{ad_Storage:'denied',analytics_Storage:'denied'});var s=document.createElement('script');s.async=true;s.src='https://www.clarity.ms/tag/${CLARITY_ID}';document.head.appendChild(s);})();`} />
+      <script is:inline set:html={`(function(){window.clarity=window.clarity||function(){(window.clarity.q=window.clarity.q||[]).push(arguments);};window.clarity('consentv2',{ad_Storage:'denied',analytics_Storage:'denied'});window.__differer('https://www.clarity.ms/tag/${CLARITY_ID}');})();`} />
     )}
     {/* Régimes 'opt-in' / 'notice' (anciens) : Clarity ne se charge qu'avec un choix favorable
          (ou par défaut en 'notice'). Sans cela, seule une file d'attente vide existe. */}

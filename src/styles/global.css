@@ -27,6 +27,22 @@ h1, h2, h3, h4 { hyphens: auto; overflow-wrap: break-word; }
 .rechner { margin-bottom: 3rem; }
 .prose .overflow-x-auto { margin-top: 1.75em; margin-bottom: 1.75em; } .prose .overflow-x-auto > table { margin-top: 0; margin-bottom: 0; }
 
+/* Tableaux sur mobile (audit du 2026-10-28 : 85 sites sur 202 avaient un tableau plus large que
+   l'écran, colonnes coupées sans indice) : tout tableau du contenu défile dans sa propre largeur,
+   et une ombre sur le bord indique qu'il reste des colonnes (ombres « locales » qui suivent le
+   défilement, sans JS). Un tableau déjà dans un .overflow-x-auto garde son conteneur. */
+@media (max-width: 767px) {
+  main :not(.overflow-x-auto) > table, .overflow-x-auto {
+    max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    background:
+      linear-gradient(to right, #fff 30%, rgb(255 255 255 / 0)) left / 2rem 100% no-repeat local,
+      linear-gradient(to left, #fff 30%, rgb(255 255 255 / 0)) right / 2rem 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgb(0 0 0 / .18), rgb(0 0 0 / 0)) left / .75rem 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgb(0 0 0 / .18), rgb(0 0 0 / 0)) right / .75rem 100% no-repeat scroll;
+  }
+  main :not(.overflow-x-auto) > table { display: block; }
+}
+
 /* Aide d'un champ (RECETTE §10.3) : dans une rangée à deux champs, si le voisin de droite n'a pas
    d'aide, celle du champ de gauche s'étend sur toute la rangée au lieu de s'enrouler sur 3 à 8
    lignes dans une demi-colonne. La rangée sert de conteneur (100cqw = sa largeur exacte) et les
