@@ -74,7 +74,7 @@ export default function MiniSimAutonome({ kind, lang = 'en', href, locale = 'en-
           <p className="text-sm font-medium" style={{ color: C.muted }}>{out.head[0]}</p>
           <p className="tabular-nums mt-1 text-3xl font-bold" style={{ color: C.text }}>{out.head[1]}</p>
           <table className="mt-3 w-full text-sm"><tbody>
-            {out.rows.map(([l, x]) => <tr key={l} style={{ borderTop: `1px solid ${C.border}` }}><td className="py-1.5 pr-3" style={{ color: C.muted }}>{l}</td><td className="tabular-nums py-1.5 text-right" style={{ color: C.text }}>{x}</td></tr>)}
+            {out.rows.map(([l, x]) => <tr key={l} style={{ borderTop: `1px solid ${C.border}` }}><td className="py-1.5 pr-3 hyphens-auto [overflow-wrap:anywhere]" style={{ color: C.muted }}>{l}</td><td className="tabular-nums py-1.5 text-right [overflow-wrap:break-word]" style={{ color: C.text }}>{x}</td></tr>)}
           </tbody></table>
           {out.note && <p className="mt-2 text-xs" style={{ color: C.muted }}>{out.note}</p>}
         </div>

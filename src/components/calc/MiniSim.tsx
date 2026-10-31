@@ -30,7 +30,7 @@ export default function MiniSim({ kind, lang = 'es', href, defaults = {}, lead =
           <p className="text-sm font-medium text-navy-600">{out.head[0]}</p>
           <p className="tabular-nums mt-1 text-3xl font-bold text-navy-900">{out.head[1]}</p>
           <table className="mt-3 w-full text-sm"><tbody className="divide-y divide-navy-200">
-            {out.rows.map(([l, x]) => <tr key={l}><td className="py-1.5 pr-3 text-navy-600">{l}</td><td className="tabular-nums py-1.5 text-right text-navy-900 [overflow-wrap:anywhere]">{x}</td></tr>)}
+            {out.rows.map(([l, x]) => <tr key={l}><td className="py-1.5 pr-3 text-navy-600 hyphens-auto [overflow-wrap:anywhere]">{l}</td><td className="tabular-nums py-1.5 text-right text-navy-900 [overflow-wrap:break-word]">{x}</td></tr>)}
           </tbody></table>
           {out.note && <p className="mt-2 text-xs text-navy-600">{out.note}</p>}
         </div>
