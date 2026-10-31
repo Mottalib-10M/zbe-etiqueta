@@ -73,8 +73,17 @@ export interface Veredicto {
 
 export function franja(h: string): Veredicto['franja'] {
   const m = h.match(/(\d\d:\d\d)-(\d\d:\d\d)/);
-  if (!m || h === '24h' || /00:00-24:00/.test(h)) return null;
+  if (!m || h === '24h' || (/00:00-24:00/.test(h) && !/L-[VS]/.test(h))) return null;
   return { dias: /L-V/.test(h) ? 'LV' : /L-S/.test(h) ? 'LS' : 'todos', desde: m[1], hasta: m[2], festivos: /festivo|laborable/.test(h) };
+}
+
+/** ¿Se controla la zona ese día de la semana? « L-V » : lunes a viernes, « L-S » : lunes a sábado (la hora y los
+ *  festivos no se tienen en cuenta : el horario se muestra en el resultado). */
+export function controlaElDia(z: Zona, fecha: string): boolean {
+  const d = new Date(`${fecha}T12:00:00Z`).getUTCDay();
+  if (/L-V/.test(z.horario)) return d >= 1 && d <= 5;
+  if (/L-S/.test(z.horario)) return d >= 1 && d <= 6;
+  return true;
 }
 
 /** Una regla limitada a ciertas categorías gana a la general para esas categorías. */

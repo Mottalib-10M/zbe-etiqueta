@@ -10,7 +10,7 @@ import NumberField from '../ui/NumberField';
 import SelectField from '../ui/SelectField';
 import Toggle from '../ui/Toggle';
 import { etiquetaDe, esHibrido, esPhev, type Categoria, type Energia } from '../../lib/engine/etiqueta';
-import { CIUDADES, ciudad as getCiudad, veredicto, multa, type Perfil } from '../../lib/engine/zbe';
+import { CIUDADES, ciudad as getCiudad, veredicto, multa, controlaElDia, type Perfil } from '../../lib/engine/zbe';
 import { cuotaTurismo, municipio as getMunicipio } from '../../lib/engine/ivtm';
 import { P } from '../../lib/engine/params';
 import { readParams, num, str, updateURL } from '../../lib/url-state';
@@ -52,7 +52,9 @@ export default function ZbeTool({ lang = 'es', methodHref, preset = {}, ciudadHr
   const city = getCiudad(c);
   const perfil: Perfil = { domicilio: dom, residenteZona: res === '1' };
   const vs = useMemo(() => veredicto(c, et.etiqueta, perfil, fecha, cat), [c, et.etiqueta, dom, res, fecha, cat]);
-  const peor = vs.find((v) => v.acceso === 'prohibido') ?? vs.find((v) => v.acceso === 'solo_aparcamiento') ?? vs.find((v) => v.acceso === 'condicionado') ?? vs[0];
+  // Acceso efectivo el día del viaje : una zona que solo se controla de lunes a viernes no restringe el sábado.
+  const efectivo = (v: (typeof vs)[number]) => (controlaElDia(v.zona, fecha) ? v.acceso : 'permitido');
+  const peor = vs.find((v) => efectivo(v) === 'prohibido') ?? vs.find((v) => efectivo(v) === 'solo_aparcamiento') ?? vs.find((v) => efectivo(v) === 'condicionado') ?? vs[0];
   const muni = getMunicipio(c);
   const edad = Math.max(0, Number(fecha.slice(0, 4)) - anioOk);
   const tecnologia = en === 'bev' ? 'electrico' : esHibrido(en) ? 'hibrido' : en === 'glp' || en === 'gnc' ? 'gas' : 'combustion';
@@ -75,8 +77,9 @@ export default function ZbeTool({ lang = 'es', methodHref, preset = {}, ciudadHr
       : tx(lang, `IVTM: ordenanza fiscal de ${city.nombre} no incluida; el artículo 95 TRLHL fija para ${f.num(cvf, 2)} caballos fiscales una cuota de ${f.eur(iv.minimaEstatal)} a ${f.eur(iv.maxima)} (coeficiente de 1 a 2).`, `IVTM: ${city.nombre}'s tax byelaw is not included; section 95 of the Local Finance Act sets ${f.eur(iv.minimaEstatal)} to ${f.eur(iv.maxima)} for ${f.num(cvf, 2)} fiscal hp (multiplier 1 to 2).`),
   ];
   const ciudadOpt = CIUDADES.map((x) => ({ value: x.slug, label: x.nombre }));
-  const anyNo = vs.some((v) => v.acceso !== 'permitido');
-  const mixto = anyNo && vs.some((v) => v.acceso === 'permitido');
+  const anyNo = vs.some((v) => efectivo(v) !== 'permitido');
+  // Zonas con accesos distintos (p. ej. Madrid ZBE con condiciones y Distrito Centro prohibido) : depende de la zona.
+  const mixto = anyNo && new Set(vs.map(efectivo)).size > 1;
   const titular = mixto ? tx(lang, 'Depende de la zona', 'Depends on the zone') : anyNo ? accesoTitulo(peor.acceso, lang) : accesoTitulo('permitido', lang);
   const enlaceCiudad = ciudadHrefs[c];
   return (
@@ -126,6 +129,7 @@ export default function ZbeTool({ lang = 'es', methodHref, preset = {}, ciudadHr
               <li key={v.zona.id} className={`rounded-lg border px-3 py-2 text-sm acc-${v.acceso}`}>
                 <p className="font-semibold">{v.zona.nombre}: {accesoTitulo(v.acceso, lang).toLowerCase()}</p>
                 <p className="mt-0.5">{v.acceso === 'permitido' ? accesoDetalle('permitido', lang) : `${accesoDetalle(v.acceso, lang)} ${tx(lang, 'Control', 'Enforced')}: ${horarioTexto(v.zona, lang)}.`}</p>
+                {v.acceso !== 'permitido' && !controlaElDia(v.zona, fecha) && <p className="mt-0.5 text-xs font-semibold">{tx(lang, `El ${f.date(fecha)} no hay control: la zona solo se controla ${horarioTexto(v.zona, 'es')}.`, `No enforcement on ${f.date(fecha)}: the zone is only enforced ${horarioTexto(v.zona, 'en')}.`)}</p>}
                 {(lang === 'en' ? v.regla?.nota_en : v.regla?.nota) && <p className="mt-0.5 text-xs">{lang === 'en' ? v.regla?.nota_en : v.regla?.nota}</p>}
                 {v.proximo && <p className="mt-1 text-xs font-semibold">{tx(lang, `A partir del ${f.date(v.proximo.fecha)}: ${accesoTitulo(v.proximo.acceso, 'es').toLowerCase()}.`, `From ${f.date(v.proximo.fecha)}: ${accesoTitulo(v.proximo.acceso, 'en').toLowerCase()}.`)}</p>}
               </li>

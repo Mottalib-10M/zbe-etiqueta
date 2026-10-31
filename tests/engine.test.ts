@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { etiquetaDe } from '../src/lib/engine/etiqueta';
-import { veredicto, ciudad, CIUDADES, aplica, calendario, multa, etiquetasRestringidas } from '../src/lib/engine/zbe';
+import { veredicto, ciudad, CIUDADES, aplica, calendario, multa, etiquetasRestringidas, controlaElDia } from '../src/lib/engine/zbe';
 import { cvfCombustion, cvfElectrico, cuotaTurismo, prorrateo, tramo, TRAMOS_ESTADO } from '../src/lib/engine/ivtm';
 
 const fuera = { domicilio: 'fuera' as const, residenteZona: false };
@@ -245,5 +245,18 @@ describe('IVTM por municipio (ordenanzas fiscales 2026)', () => {
   it('ninguna cuota municipal supera el doble de la mínima estatal en régimen común', async () => {
     const { MUNICIPIOS } = await import('../src/lib/engine/ivtm');
     for (const m of MUNICIPIOS.filter((x) => x.regimen === 'comun')) m.turismos.forEach((t, i) => expect(t.cuota).toBeLessThanOrEqual(TRAMOS_ESTADO[i].cuota * 2 + 0.01));
+  });
+});
+
+describe('Día del viaje y veredicto mixto (audit del 28/10/2026)', () => {
+  // ZBE Rondes de Barcelona y Cartuja de Sevilla : solo de lunes a viernes (horario de la ordenanza, en los datos)
+  it('sábado 31/10/2026 sin control en Barcelona y Sevilla, lunes 02/11/2026 con control', () => {
+    const bcn = ciudad('barcelona').zonas[0], sev = ciudad('sevilla').zonas[0];
+    expect(controlaElDia(bcn, '2026-10-31')).toBe(false); expect(controlaElDia(sev, '2026-10-31')).toBe(false);
+    expect(controlaElDia(bcn, '2026-11-02')).toBe(true);
+  });
+  it('Madrid, sin etiqueta, domiciliado: accesos distintos según la zona', () => {
+    const vs = veredicto('madrid', 'A', { domicilio: 'ciudad', residenteZona: false }, '2026-10-28');
+    expect(new Set(vs.map((v) => v.acceso)).size).toBeGreaterThan(1);
   });
 });
